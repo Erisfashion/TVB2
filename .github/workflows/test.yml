@@ -20,7 +20,7 @@ jobs:
 
     - name: Clean Runner Newer SDK Platforms
       run: |
-        # 清理 Ubuntu 24.04 预装的高版本预览 SDK，彻底消除日志中刷屏的 NumberFormatException 警告
+        # 移除构建机中无法被旧版 AGP 识别的 34+ 平台，彻底消除格式解析警告
         SDK_DIR="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
         if [ -d "$SDK_DIR/platforms" ]; then
           rm -rf "$SDK_DIR"/platforms/android-3[4-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
@@ -36,7 +36,7 @@ jobs:
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk_extracted
 
-        # 从官方镜像拉取 ijkplayer-x86 AAR 并解压部署动态库
+        # 拉取官方 ijkplayer-x86 AAR 并解压部署动态库
         curl -f -L -s -S -o /tmp/ijk-x86.aar "https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
         unzip -q -o /tmp/ijk-x86.aar -d /tmp/ijk_extracted
         cp -r /tmp/ijk_extracted/jni/x86/* player/src/main/jniLibs/x86/
