@@ -31,7 +31,7 @@ jobs:
       run: |
         mkdir -p player/src/main/jniLibs/x86
 
-        # 从稳定的开源备份仓库拉取 ijkplayer x86 核心二进制库
+        # 从开源备份拉取 ijkplayer x86 核心动态库
         BASE_URL="https://raw.githubusercontent.com/CarGuo/GSYVideoPlayer/master/gsyVideoPlayer-x86/src/main/jniLibs/x86"
         SO_FILES=("libijkffmpeg.so" "libijkplayer.so" "libijksdl.so")
 
