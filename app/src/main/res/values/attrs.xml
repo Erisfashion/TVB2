@@ -3,16 +3,11 @@
     <attr name="fontPath" format="string" />
     <attr name="textFieldStyle" format="reference" />
 
-    <!-- 补齐布局所需的电视列表自定义属性，彻底解决 AAPT 找不到属性问题 -->
+    <!-- 补齐布局所需的自定义属性，解决 AAPT 找不到属性报错 -->
     <attr name="tv_layoutManager" format="string" />
     <attr name="tv_verticalSpacingWithMargins" format="dimension|reference" />
     <attr name="tv_horizontalSpacingWithMargins" format="dimension|reference" />
     <attr name="tv_selectedItemIsCentered" format="boolean" />
-    <attr name="tv_selectedItemOffsetStart" format="dimension" />
-    <attr name="tv_selectedItemOffsetEnd" format="dimension" />
-    <attr name="tv_isMenu" format="boolean" />
-    <attr name="tv_isMemoryFocus" format="boolean" />
-    <attr name="tv_optimizeLayout" format="boolean" />
 
     <declare-styleable name="lbBaseGridView">
         <attr name="focusOutFront" format="boolean" />
