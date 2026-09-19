@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.base;
 
 import android.app.Activity;
+import android.content.Context;
 import androidx.multidex.MultiDexApplication;
 
 import com.github.tvbox.osc.bean.VodInfo;
@@ -36,28 +37,44 @@ public class App extends MultiDexApplication {
     private static String dashData;
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        // 第一时间接管未捕获异常
+        CrashHandler.getInstance().init(base);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
-        initParams();
-        // OKGo
-        OkGoHelper.init(); //台标获取
-        EpgUtil.init();
-        // 初始化Web服务器
-        ControlManager.init(this);
-        //初始化数据库
-        AppDataManager.init();
-        LoadSir.beginBuilder()
-                .addCallback(new EmptyCallback())
-                .addCallback(new LoadingCallback())
-                .commit();
-        AutoSizeConfig.getInstance().setCustomFragment(true).getUnitsManager()
-                .setSupportDP(false)
-                .setSupportSP(false)
-                .setSupportSubunits(Subunits.MM);
-        PlayerHelper.init();
-        JSEngine.getInstance().create();
-        FileUtils.cleanPlayerCache();
+        // 确保 Application 初始化阶段的异常也能被捕获并落盘
+        CrashHandler.getInstance().init(this);
+
+        try {
+            initParams();
+            // OKGo
+            OkGoHelper.init(); //台标获取
+            EpgUtil.init();
+            // 初始化Web服务器
+            ControlManager.init(this);
+            // 初始化数据库
+            AppDataManager.init();
+            LoadSir.beginBuilder()
+                    .addCallback(new EmptyCallback())
+                    .addCallback(new LoadingCallback())
+                    .commit();
+            AutoSizeConfig.getInstance().setCustomFragment(true).getUnitsManager()
+                    .setSupportDP(false)
+                    .setSupportSP(false)
+                    .setSupportSubunits(Subunits.MM);
+            PlayerHelper.init();
+            JSEngine.getInstance().create();
+            FileUtils.cleanPlayerCache();
+        } catch (Throwable t) {
+            LOG.e("App onCreate error: " + t.getMessage());
+            // 如果某项初始化导致了严重异常，手动抛给 CrashHandler 记录
+            Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), t);
+        }
     }
 
     private void initParams() {
@@ -78,7 +95,6 @@ public class App extends MultiDexApplication {
         super.onTerminate();
         JSEngine.getInstance().destroy();
     }
-
 
     private VodInfo vodInfo;
     public void setVodInfo(VodInfo vodinfo){
