@@ -74,7 +74,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    // Room 数据库
+    // Room 本地数据库
     implementation 'androidx.room:room-runtime:2.3.0'
     annotationProcessor 'androidx.room:room-compiler:2.3.0'
 
@@ -86,16 +86,24 @@ dependencies {
     implementation 'com.github.lzyzsd:jsbridge:1.0.4'
     implementation 'com.squareup.picasso:picasso:2.71828'
 
-    // 状态管理与存储
+    // 本地 HTTP/WebSocket 服务 (解决 RemoteServer 与 RequestProcess 缺失 NanoHTTPD)
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'org.nanohttpd:nanohttpd-websocket:2.3.1'
+
+    // 二维码与 HTML 爬虫支持 (解决 QRCodeGen 与 HtmlParser)
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'org.jsoup:jsoup:1.14.3'
+
+    // 状态管理与本地存储
     implementation 'com.kingja.loadsir:loadsir:1.3.8'
     implementation 'com.orhanobut:hawk:2.0.1'
 
-    // 屏幕适配与 UI 列表组件（BRVAH 必须使用 2.9.50 以匹配源码中的 BaseViewHolder 包路径）
+    // 屏幕适配与 TV 列表组件
     implementation 'me.jessyan:autosize:1.2.1'
     implementation 'com.owen:tv-recyclerview:3.0.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.50'
 
-    // 网页嗅探组件（采用源码对应的共享模式库）
+    // Crosswalk 共享组件
     implementation 'org.xwalk:xwalk_shared_library:23.53.589.4'
 
     implementation project(':player')
