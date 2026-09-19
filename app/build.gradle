@@ -57,12 +57,23 @@ android {
     }
 
     packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/INDEX.LIST'
+
         pickFirst 'lib/x86/libijkffmpeg.so'
         pickFirst 'lib/x86/libijkplayer.so'
         pickFirst 'lib/x86/libijksdl.so'
+        pickFirst 'lib/x86/libxwalkcore.so'
         pickFirst 'lib/armeabi-v7a/libijkffmpeg.so'
         pickFirst 'lib/armeabi-v7a/libijkplayer.so'
         pickFirst 'lib/armeabi-v7a/libijksdl.so'
+        pickFirst 'lib/armeabi-v7a/libxwalkcore.so'
     }
 }
 
@@ -74,7 +85,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    // Room 本地数据库
+    // Room 数据库
     implementation 'androidx.room:room-runtime:2.3.0'
     annotationProcessor 'androidx.room:room-compiler:2.3.0'
 
@@ -86,11 +97,11 @@ dependencies {
     implementation 'com.github.lzyzsd:jsbridge:1.0.4'
     implementation 'com.squareup.picasso:picasso:2.71828'
 
-    // 本地 HTTP/WebSocket 服务 (解决 RemoteServer 与 RequestProcess 缺失 NanoHTTPD)
+    // 本地 HTTP/WebSocket 服务
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'org.nanohttpd:nanohttpd-websocket:2.3.1'
 
-    // 二维码与 HTML 爬虫支持 (解决 QRCodeGen 与 HtmlParser)
+    // 二维码与 HTML 爬虫
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'org.jsoup:jsoup:1.14.3'
 
@@ -102,6 +113,11 @@ dependencies {
     implementation 'me.jessyan:autosize:1.2.1'
     implementation 'com.owen:tv-recyclerview:3.0.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.50'
+
+    // XML 解析（解决 Movie.java、AbsXml 等缺失 XStreamAlias 报错）
+    implementation ('com.thoughtworks.xstream:xstream:1.4.18') {
+        exclude group: 'xmlpull', module: 'xmlpull'
+    }
 
     // Crosswalk 共享组件
     implementation 'org.xwalk:xwalk_shared_library:23.53.589.4'
