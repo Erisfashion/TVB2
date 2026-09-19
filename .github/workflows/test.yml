@@ -264,7 +264,7 @@ jobs:
         }
         EOF
 
-        # 7. JSUtils (com.github.tvbox.quickjs)
+        # 7. JSUtils (含完整判空及数据转换方法)
         cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSUtils.java
         package com.github.tvbox.quickjs;
 
@@ -284,6 +284,56 @@ jobs:
         import java.util.Map;
 
         public class JSUtils {
+
+            public static boolean isEmpty(String str) {
+                return str == null || str.length() == 0;
+            }
+
+            public static boolean isEmpty(CharSequence str) {
+                return str == null || str.length() == 0;
+            }
+
+            public static boolean isEmpty(Object obj) {
+                if (obj == null) return true;
+                if (obj instanceof CharSequence) return ((CharSequence) obj).length() == 0;
+                if (obj instanceof java.util.Collection) return ((java.util.Collection<?>) obj).isEmpty();
+                if (obj instanceof java.util.Map) return ((java.util.Map<?, ?>) obj).isEmpty();
+                return false;
+            }
+
+            public static boolean isNotEmpty(String str) {
+                return !isEmpty(str);
+            }
+
+            public static boolean isNotEmpty(CharSequence str) {
+                return !isEmpty(str);
+            }
+
+            public static boolean isNotEmpty(Object obj) {
+                return !isEmpty(obj);
+            }
+
+            public static boolean isBlank(String str) {
+                return isBlank((CharSequence) str);
+            }
+
+            public static boolean isBlank(CharSequence str) {
+                if (str == null) return true;
+                int len = str.length();
+                for (int i = 0; i < len; i++) {
+                    if (!Character.isWhitespace(str.charAt(i))) return false;
+                }
+                return true;
+            }
+
+            public static boolean isNotBlank(String str) {
+                return !isBlank(str);
+            }
+
+            public static boolean isNotBlank(CharSequence str) {
+                return !isBlank(str);
+            }
+
             public static Object toJavaObject(Object obj) {
                 if (obj instanceof JSArray) return toList((JSArray) obj);
                 if (obj instanceof JSObject) return toMap((JSObject) obj);
@@ -405,6 +455,10 @@ jobs:
                 }
             }
 
+            public static String optString(JSObject obj, String key) {
+                return optString(obj, key, "");
+            }
+
             public static int optInt(JSObject obj, String key, int def) {
                 if (obj == null || key == null) return def;
                 try {
@@ -415,6 +469,10 @@ jobs:
                 return def;
             }
 
+            public static int optInt(JSObject obj, String key) {
+                return optInt(obj, key, 0);
+            }
+
             public static boolean optBoolean(JSObject obj, String key, boolean def) {
                 if (obj == null || key == null) return def;
                 try {
@@ -423,6 +481,10 @@ jobs:
                     if (val instanceof String) return Boolean.parseBoolean((String) val);
                 } catch (Exception ignored) {}
                 return def;
+            }
+
+            public static boolean optBoolean(JSObject obj, String key) {
+                return optBoolean(obj, key, false);
             }
         }
         EOF
