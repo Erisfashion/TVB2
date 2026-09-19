@@ -78,7 +78,7 @@ dependencies {
     implementation 'androidx.room:room-runtime:2.3.0'
     annotationProcessor 'androidx.room:room-compiler:2.3.0'
 
-    // HTTP / 工具库
+    // HTTP / 网络 / 事件
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     implementation 'com.google.code.gson:gson:2.8.7'
     implementation 'com.squareup.picasso:picasso:2.71828'
