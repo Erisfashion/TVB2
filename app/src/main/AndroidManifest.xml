@@ -98,6 +98,12 @@
             android:name=".ui.activity.SettingActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="sensorLandscape" />
+        
+        <activity
+            android:name=".base.CrashActivity"
+            android:process=":crash"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
 
         <service
             android:name=".server.RemoteServer"
