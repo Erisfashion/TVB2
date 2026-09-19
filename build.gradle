@@ -12,10 +12,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url 'http://home.jundie.top:81/xwalk/maven2'
-            allowInsecureProtocol = true
-        }
+        maven { url 'https://jitpack.io' }
     }
 }
 
