@@ -45,7 +45,7 @@ dependencies {
     // 网络组件
     api 'com.squareup.okhttp3:okhttp:3.12.13'
 
-    // 与源码严格一致的 ExoPlayer 2.15.1 完整官方可用组件
+    // 与源码匹配的 ExoPlayer 2.15.1 组件
     api 'com.google.android.exoplayer:exoplayer-core:2.15.1'
     api 'com.google.android.exoplayer:exoplayer-dash:2.15.1'
     api 'com.google.android.exoplayer:exoplayer-hls:2.15.1'
