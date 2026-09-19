@@ -3,7 +3,7 @@
     <attr name="fontPath" format="string" />
     <attr name="textFieldStyle" format="reference" />
 
-    <!-- 补齐布局文件缺失的 3 个属性声明，解决 AAPT 编译报错 -->
+    <!-- 补齐布局文件缺失的属性声明，消除 AAPT 报错 -->
     <attr name="tv_verticalSpacingWithMargins" format="dimension|reference" />
     <attr name="tv_horizontalSpacingWithMargins" format="dimension|reference" />
     <attr name="tv_selectedItemIsCentered" format="boolean" />
