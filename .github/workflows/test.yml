@@ -27,18 +27,18 @@ jobs:
         mkdir -p ~/.android
         keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-    - name: Prepare x86 SO and Dependencies
+    - name: Prepare x86 SO Libraries
       run: |
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk
 
         echo "Fetching ijkplayer x86 binaries..."
-        URLS=(
-          "https://maven.aliyun.com/repository/jcenter/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+        # 官方 Maven Central 原生源与各大稳定海外直链
+        IJK_URLS=(
           "https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
-          "https://mirrors.huaweicloud.com/repository/maven/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+          "https://repo.maven.apache.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
         )
-        for u in "${URLS[@]}"; do
+        for u in "${IJK_URLS[@]}"; do
           echo "Trying $u"
           if curl -f -L -s -S -o /tmp/ijk/ijk-x86.aar "$u"; then
             if unzip -t /tmp/ijk/ijk-x86.aar > /dev/null 2>&1; then
@@ -56,7 +56,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build APK with Gradle
-      run: ./gradlew assembleRelease -x lint -x test --no-daemon
+      run: ./gradlew assembleRelease -x lint -x test --no-daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
