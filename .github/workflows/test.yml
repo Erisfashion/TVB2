@@ -20,10 +20,11 @@ jobs:
 
     - name: Clean Runner Newer SDK Platforms
       run: |
-        # 移除构建机中无法被旧版 AGP 识别的 34+ 平台，彻底消除格式解析警告
-        SDK_DIR="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
-        if [ -d "$SDK_DIR/platforms" ]; then
-          rm -rf "$SDK_DIR"/platforms/android-3[4-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
+        # 移除高版本构建工具与平台，彻底避免 AGP 4.2 扫描时输出海量 NumberFormatException
+        SDK_DIR="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+        if [ -d "$SDK_DIR" ]; then
+          rm -rf "$SDK_DIR"/platforms/android-3[1-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
+          rm -rf "$SDK_DIR"/build-tools/3[1-9]* "$SDK_DIR"/build-tools/[4-9]* || true
         fi
 
     - name: Create Android Debug Keystore
