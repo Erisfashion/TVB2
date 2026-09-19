@@ -32,7 +32,7 @@ jobs:
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk_extracted
 
-        # 从阿里云官方镜像归档直接下载 ijkplayer-x86 AAR
+        # 从公共 Maven 镜像归档中拉取官方打包的 ijkplayer-x86 AAR
         curl -f -L -s -S -o /tmp/ijk-x86.aar "https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
         unzip -q -o /tmp/ijk-x86.aar -d /tmp/ijk_extracted
         cp -r /tmp/ijk_extracted/jni/x86/* player/src/main/jniLibs/x86/
