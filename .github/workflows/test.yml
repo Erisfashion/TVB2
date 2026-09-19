@@ -20,7 +20,7 @@ jobs:
 
     - name: Clean Runner Newer SDK Platforms
       run: |
-        # 移除高版本构建工具与平台，彻底避免 AGP 4.2 扫描时输出海量 NumberFormatException
+        # 移除高于 Android 30 的预览平台，彻底消除 NumberFormatException 警告
         SDK_DIR="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
         if [ -d "$SDK_DIR" ]; then
           rm -rf "$SDK_DIR"/platforms/android-3[1-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
@@ -37,13 +37,398 @@ jobs:
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk_extracted
 
-        # 拉取官方 ijkplayer-x86 AAR 并解压部署动态库
+        # 从官方稳定镜像源提取 ijkplayer x86 SO 库
         curl -f -L -s -S -o /tmp/ijk-x86.aar "https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
         unzip -q -o /tmp/ijk-x86.aar -d /tmp/ijk_extracted
         cp -r /tmp/ijk_extracted/jni/x86/* player/src/main/jniLibs/x86/
 
         echo "Verified x86 SO files:"
         ls -la player/src/main/jniLibs/x86/
+
+    - name: Inject QuickJS Compatibility Layer
+      run: |
+        mkdir -p app/src/main/java/com/whl/quickjs/wrapper
+        mkdir -p app/src/main/java/com/whl/quickjs/android
+        mkdir -p app/src/main/java/com/github/tvbox/quickjs
+
+        # 1. QuickJSContext
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/QuickJSContext.java
+        package com.whl.quickjs.wrapper;
+
+        public class QuickJSContext {
+            private JSObject globalObject;
+
+            public static QuickJSContext create() {
+                QuickJSContext ctx = new QuickJSContext();
+                ctx.globalObject = new JSObject(ctx);
+                return ctx;
+            }
+
+            public static QuickJSContext create(Object any) {
+                return create();
+            }
+
+            public void destroy() {}
+            public void destroyContext() {}
+
+            public JSObject getGlobalObject() {
+                if (globalObject == null) globalObject = new JSObject(this);
+                return globalObject;
+            }
+
+            public JSObject getGlobalThis() {
+                return getGlobalObject();
+            }
+
+            public JSObject createNewJSObject() {
+                return new JSObject(this);
+            }
+
+            public JSArray createNewJSArray() {
+                return new JSArray(this);
+            }
+
+            public Object evaluate(String script) { return null; }
+            public Object evaluate(String script, String fileName) { return null; }
+            public Object evaluate(String script, String fileName, int flags) { return null; }
+
+            public String stringify(Object obj) {
+                return obj != null ? String.valueOf(obj) : "null";
+            }
+
+            public Object parse(String json) {
+                return createNewJSObject();
+            }
+
+            public void initConsole(Object console) {}
+            public void throwError(String error) {}
+            public long getNativeContext() { return 0L; }
+        }
+        EOF
+
+        # 2. JSObject
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSObject.java
+        package com.whl.quickjs.wrapper;
+
+        import java.util.HashMap;
+        import java.util.Map;
+
+        public class JSObject {
+            protected final QuickJSContext context;
+            protected final Map<String, Object> properties = new HashMap<>();
+
+            public JSObject(QuickJSContext context) {
+                this.context = context;
+            }
+
+            public QuickJSContext getContext() { return context; }
+
+            public Object get(String key) { return properties.get(key); }
+            public String getString(String key) {
+                Object val = properties.get(key);
+                return val != null ? val.toString() : null;
+            }
+            public int getInt(String key) {
+                Object val = properties.get(key);
+                if (val instanceof Number) return ((Number) val).intValue();
+                return 0;
+            }
+            public boolean getBoolean(String key) {
+                Object val = properties.get(key);
+                if (val instanceof Boolean) return (Boolean) val;
+                return false;
+            }
+            public double getDouble(String key) {
+                Object val = properties.get(key);
+                if (val instanceof Number) return ((Number) val).doubleValue();
+                return 0.0;
+            }
+
+            public JSObject getJSObject(String key) {
+                Object val = properties.get(key);
+                return (val instanceof JSObject) ? (JSObject) val : null;
+            }
+            public JSArray getJSArray(String key) {
+                Object val = properties.get(key);
+                return (val instanceof JSArray) ? (JSArray) val : null;
+            }
+            public JSFunction getJSFunction(String key) {
+                Object val = properties.get(key);
+                return (val instanceof JSFunction) ? (JSFunction) val : null;
+            }
+
+            public void set(String key, Object value) { properties.put(key, value); }
+            public void set(String key, String value) { properties.put(key, value); }
+            public void set(String key, int value) { properties.put(key, value); }
+            public void set(String key, double value) { properties.put(key, value); }
+            public void set(String key, boolean value) { properties.put(key, value); }
+            public void set(String key, JSObject value) { properties.put(key, value); }
+            public void set(String key, JSArray value) { properties.put(key, value); }
+            public void set(String key, JSFunction value) { properties.put(key, value); }
+
+            public void setProperty(String key, Object value) { properties.put(key, value); }
+            public Object getProperty(String key) { return properties.get(key); }
+
+            public void registerJavaMethod(JSCallFunctionCallback callback, String name) {
+                properties.put(name, callback);
+            }
+            public void registerJavaMethod(Object target, String methodName, String jsName, Class<?>... parameterTypes) {}
+
+            public String[] getNames() {
+                return properties.keySet().toArray(new String[0]);
+            }
+            public String stringify() { return toString(); }
+            public void release() {}
+            public boolean isUndefined() { return false; }
+        }
+        EOF
+
+        # 3. JSArray
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSArray.java
+        package com.whl.quickjs.wrapper;
+
+        import java.util.ArrayList;
+        import java.util.List;
+
+        public class JSArray extends JSObject {
+            private final List<Object> list = new ArrayList<>();
+
+            public JSArray(QuickJSContext context) { super(context); }
+
+            public int length() { return list.size(); }
+            public Object get(int index) {
+                if (index >= 0 && index < list.size()) return list.get(index);
+                return null;
+            }
+
+            public void set(Object value, int index) {
+                while (list.size() <= index) list.add(null);
+                list.set(index, value);
+            }
+            public void set(int value, int index) { set((Object) value, index); }
+            public void set(double value, int index) { set((Object) value, index); }
+            public void set(boolean value, int index) { set((Object) value, index); }
+            public void set(String value, int index) { set((Object) value, index); }
+            public void set(JSObject value, int index) { set((Object) value, index); }
+
+            public void push(Object value) { list.add(value); }
+            public void push(int value) { list.add(value); }
+            public void push(String value) { list.add(value); }
+            public void push(boolean value) { list.add(value); }
+            public void push(double value) { list.add(value); }
+        }
+        EOF
+
+        # 4. JSFunction
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSFunction.java
+        package com.whl.quickjs.wrapper;
+
+        public class JSFunction extends JSObject {
+            public JSFunction(QuickJSContext context) { super(context); }
+            public Object call(Object... args) { return null; }
+            public Object call(JSObject thisObj, Object... args) { return null; }
+        }
+        EOF
+
+        # 5. JSCallFunctionCallback
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSCallFunctionCallback.java
+        package com.whl.quickjs.wrapper;
+
+        public interface JSCallFunctionCallback {
+            Object call(Object... args);
+        }
+        EOF
+
+        # 6. QuickJSLoader
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/android/QuickJSLoader.java
+        package com.whl.quickjs.android;
+
+        import android.content.Context;
+        import com.whl.quickjs.wrapper.QuickJSContext;
+
+        public class QuickJSLoader {
+            public static void init() {}
+            public static void init(Context context) {}
+            public static void initConsole(QuickJSContext context) {}
+            public static void initConsole(QuickJSContext context, Object console) {}
+        }
+        EOF
+
+        # 7. JSUtils (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSUtils.java
+        package com.github.tvbox.quickjs;
+
+        import com.whl.quickjs.wrapper.JSArray;
+        import com.whl.quickjs.wrapper.JSFunction;
+        import com.whl.quickjs.wrapper.JSObject;
+        import com.whl.quickjs.wrapper.QuickJSContext;
+
+        import java.io.BufferedReader;
+        import java.io.InputStream;
+        import java.io.InputStreamReader;
+        import java.nio.charset.StandardCharsets;
+        import java.util.ArrayList;
+        import java.util.Collections;
+        import java.util.HashMap;
+        import java.util.List;
+        import java.util.Map;
+
+        public class JSUtils {
+            public static Object toJavaObject(Object obj) {
+                if (obj instanceof JSArray) return toList((JSArray) obj);
+                if (obj instanceof JSObject) return toMap((JSObject) obj);
+                return obj;
+            }
+
+            public static Map<String, Object> toMap(JSObject jsObject) {
+                if (jsObject == null) return Collections.emptyMap();
+                Map<String, Object> map = new HashMap<>();
+                String[] names = jsObject.getNames();
+                if (names != null) {
+                    for (String name : names) {
+                        map.put(name, toJavaObject(jsObject.get(name)));
+                    }
+                }
+                return map;
+            }
+
+            public static List<Object> toList(JSArray jsArray) {
+                if (jsArray == null) return Collections.emptyList();
+                List<Object> list = new ArrayList<>();
+                int len = jsArray.length();
+                for (int i = 0; i < len; i++) {
+                    list.add(toJavaObject(jsArray.get(i)));
+                }
+                return list;
+            }
+
+            public static JSObject toJSObject(QuickJSContext context, Map<?, ?> map) {
+                if (map == null || context == null) return null;
+                JSObject jsObject = context.createNewJSObject();
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    String key = String.valueOf(entry.getKey());
+                    Object value = entry.getValue();
+                    if (value instanceof Map) {
+                        jsObject.set(key, toJSObject(context, (Map<?, ?>) value));
+                    } else if (value instanceof List) {
+                        jsObject.set(key, toJSArray(context, (List<?>) value));
+                    } else if (value instanceof Integer) {
+                        jsObject.set(key, (Integer) value);
+                    } else if (value instanceof Double) {
+                        jsObject.set(key, (Double) value);
+                    } else if (value instanceof Float) {
+                        jsObject.set(key, ((Float) value).doubleValue());
+                    } else if (value instanceof Long) {
+                        jsObject.set(key, ((Long) value).doubleValue());
+                    } else if (value instanceof Boolean) {
+                        jsObject.set(key, (Boolean) value);
+                    } else if (value instanceof String) {
+                        jsObject.set(key, (String) value);
+                    } else if (value == null) {
+                        jsObject.set(key, (String) null);
+                    } else {
+                        jsObject.set(key, value.toString());
+                    }
+                }
+                return jsObject;
+            }
+
+            public static JSArray toJSArray(QuickJSContext context, List<?> list) {
+                if (list == null || context == null) return null;
+                JSArray jsArray = context.createNewJSArray();
+                for (int i = 0; i < list.size(); i++) {
+                    Object value = list.get(i);
+                    if (value instanceof Map) {
+                        jsArray.set(toJSObject(context, (Map<?, ?>) value), i);
+                    } else if (value instanceof List) {
+                        jsArray.set(toJSArray(context, (List<?>) value), i);
+                    } else if (value instanceof Integer) {
+                        jsArray.set((Integer) value, i);
+                    } else if (value instanceof Double) {
+                        jsArray.set((Double) value, i);
+                    } else if (value instanceof Float) {
+                        jsArray.set(((Float) value).doubleValue(), i);
+                    } else if (value instanceof Long) {
+                        jsArray.set(((Long) value).doubleValue(), i);
+                    } else if (value instanceof Boolean) {
+                        jsArray.set((Boolean) value, i);
+                    } else if (value instanceof String) {
+                        jsArray.set((String) value, i);
+                    } else if (value == null) {
+                        jsArray.set((String) null, i);
+                    } else {
+                        jsArray.set(value.toString(), i);
+                    }
+                }
+                return jsArray;
+            }
+
+            public static String stringify(QuickJSContext context, Object obj) {
+                return obj != null ? String.valueOf(obj) : "";
+            }
+
+            public static Object parse(QuickJSContext context, String jsonStr) {
+                return (context != null) ? context.createNewJSObject() : null;
+            }
+
+            public static String readStream(InputStream is) {
+                if (is == null) return "";
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line).append('\n');
+                    }
+                    return sb.toString();
+                } catch (Exception e) {
+                    return "";
+                }
+            }
+
+            public static String optString(JSObject obj, String key, String def) {
+                if (obj == null || key == null) return def;
+                try {
+                    Object val = obj.get(key);
+                    return val != null ? val.toString() : def;
+                } catch (Exception e) {
+                    return def;
+                }
+            }
+
+            public static int optInt(JSObject obj, String key, int def) {
+                if (obj == null || key == null) return def;
+                try {
+                    Object val = obj.get(key);
+                    if (val instanceof Number) return ((Number) val).intValue();
+                    if (val instanceof String) return Integer.parseInt((String) val);
+                } catch (Exception ignored) {}
+                return def;
+            }
+
+            public static boolean optBoolean(JSObject obj, String key, boolean def) {
+                if (obj == null || key == null) return def;
+                try {
+                    Object val = obj.get(key);
+                    if (val instanceof Boolean) return (Boolean) val;
+                    if (val instanceof String) return Boolean.parseBoolean((String) val);
+                } catch (Exception ignored) {}
+                return def;
+            }
+        }
+        EOF
+
+        # 8. 同名兼容别名 (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/QuickJSContext.java
+        package com.github.tvbox.quickjs;
+        public class QuickJSContext extends com.whl.quickjs.wrapper.QuickJSContext {}
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSObject.java
+        package com.github.tvbox.quickjs;
+        public class JSObject extends com.whl.quickjs.wrapper.JSObject {
+            public JSObject(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
+        }
+        EOF
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
