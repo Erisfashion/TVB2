@@ -86,5 +86,9 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'com.kingja.loadsir:loadsir:1.3.8'
 
+    // TV 列表与适配器核心支持（提供 tv_layoutManager 及页面列表渲染）
+    implementation 'com.owen:tv-recyclerview:3.0.0'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.4'
+
     implementation project(':player')
 }
