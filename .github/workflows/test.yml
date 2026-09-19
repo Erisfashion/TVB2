@@ -1,10 +1,10 @@
 name: Test Build
 
 on:
-#  push:
-#    branches:
-#      - main
-#  pull_request:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
   workflow_dispatch:
 
 jobs:
@@ -14,16 +14,27 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # 插入以下步骤：指定 JDK 11 环境以适配 Gradle 6.7.1 及 Android 4.2.2 构建
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
       - name: Build With Gradle
         run: |
           chmod +x gradlew
           ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
+
       - name: Prepare App
         run: |
           mkdir -p ${{ github.workspace }}/apk/
           for file in `find ~ -name "*.apk" -print`; do
             mv "$file" ${{ github.workspace }}/apk/
           done
+
       - name: Upload App To Artifact
         uses: actions/upload-artifact@v4
         with:
