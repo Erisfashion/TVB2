@@ -1,86 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.github.tvbox.osc">
 
-    <uses-feature
-        android:name="android.software.leanback"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.touchscreen"
-        android:required="false" />
+    <uses-sdk
+        android:minSdkVersion="16"
+        tools:overrideLibrary="com.google.android.exoplayer2.ext.okhttp, com.google.android.exoplayer2, com.google.android.exoplayer2.ui, com.google.android.exoplayer2.source.dash, com.google.android.exoplayer2.source.hls, com.google.android.exoplayer2.source.rtsp, com.google.android.exoplayer2.ext.rtmp" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
 
     <application
         android:name=".base.App"
         android:allowBackup="true"
-        android:banner="@drawable/app_banner"
-        android:configChanges="orientation|keyboardHidden|screenSize"
-        android:hardwareAccelerated="true"
         android:icon="@drawable/app_icon"
         android:label="@string/app_name"
-        android:largeHeap="true"
+        android:banner="@drawable/app_banner"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme.NoActionBar"
+        android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
         <activity
             android:name=".ui.activity.HomeActivity"
-            android:screenOrientation="sensorLandscape">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
-            android:name=".ui.activity.LivePlayActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.DetailActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="sensorLandscape" />
-        <activity
             android:name=".ui.activity.PlayActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.PushActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.SearchActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.FastSearchActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.SettingActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.HistoryActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.CollectActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="sensorLandscape" />
 
-        <receiver android:name=".receiver.SearchReceiver">
+        <activity
+            android:name=".ui.activity.LivePlayActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.activity.DetailActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.activity.SearchActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name=".ui.activity.FastSearchActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name=".ui.activity.CollectActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.activity.HistoryActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.activity.PushActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.activity.SettingActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="sensorLandscape" />
+
+        <service
+            android:name=".server.RemoteServer"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.CustomWebReceiver"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.content.movie.search.Action" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".receiver.CustomWebReceiver">
-            <intent-filter>
-                <action android:name="android.content.movie.custom.web.Action" />
+                <action android:name="com.github.tvbox.osc.action.server" />
             </intent-filter>
         </receiver>
 
@@ -94,19 +121,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <meta-data
-            android:name="design_width_in_dp"
-            android:value="1280" />
-        <meta-data
-            android:name="design_height_in_dp"
-            android:value="720" />
-
-        <meta-data
-            android:name="xwalk_enable_download_mode"
-            android:value="enable" />
-        <meta-data
-            android:name="xwalk_verify"
-            android:value="disable" />
     </application>
 
 </manifest>
