@@ -70,10 +70,12 @@ android {
         pickFirst 'lib/x86/libijkplayer.so'
         pickFirst 'lib/x86/libijksdl.so'
         pickFirst 'lib/x86/libxwalkcore.so'
+        pickFirst 'lib/x86/libquickjs.so'
         pickFirst 'lib/armeabi-v7a/libijkffmpeg.so'
         pickFirst 'lib/armeabi-v7a/libijkplayer.so'
         pickFirst 'lib/armeabi-v7a/libijksdl.so'
         pickFirst 'lib/armeabi-v7a/libxwalkcore.so'
+        pickFirst 'lib/armeabi-v7a/libquickjs.so'
     }
 }
 
@@ -85,7 +87,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    // 注解库支持（彻底解决 LiveController、LivePasswordDialog 报 class NotNull 找不到符号）
+    // 注解支持
     implementation 'androidx.annotation:annotation:1.2.0'
     implementation 'org.jetbrains:annotations:19.0.0'
 
@@ -100,6 +102,13 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'com.github.lzyzsd:jsbridge:1.0.4'
     implementation 'com.squareup.picasso:picasso:2.71828'
+
+    // 字幕编码与 IO 流支持（解决 SubtitleLoader 缺失 ReaderInputStream 和 UniversalDetector）
+    implementation 'commons-io:commons-io:2.8.0'
+    implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
+
+    // QuickJS 引擎（解决 JSEngine 与 HtmlParser 缺失 QuickJSContext、JSObject、JSUtils）
+    implementation 'com.github.tvbox:quickjs:1.0.5'
 
     // 本地 HTTP/WebSocket 服务
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
@@ -118,7 +127,7 @@ dependencies {
     implementation 'com.owen:tv-recyclerview:3.0.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.50'
 
-    // XML 解析
+    // XML 解析组件
     implementation ('com.thoughtworks.xstream:xstream:1.4.18') {
         exclude group: 'xmlpull', module: 'xmlpull'
     }
