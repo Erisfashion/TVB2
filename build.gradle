@@ -1,31 +1,25 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
-        gradlePluginPortal()
         google()
         mavenCentral()
-        maven { url "https://jitpack.io" }
-        //maven { url 'https://download.01.org/crosswalk/releases/crosswalk/android/maven2' }
-        maven { url 'http://home.jundie.top:81/xwalk/maven2' }
-//        maven { url 'http://9xi4o.tk/maven2' }
+        jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath "com.android.tools.build:gradle:4.2.0"
     }
 }
 
 allprojects {
     repositories {
-        gradlePluginPortal()
         google()
         mavenCentral()
-        maven { url "https://jitpack.io" }
-        //maven { url 'https://download.01.org/crosswalk/releases/crosswalk/android/maven2' }
-//        maven { url 'http://9xi4o.tk/maven2' }
-        maven { url 'http://home.jundie.top:81/xwalk/maven2' }
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven {
+            url 'http://home.jundie.top:81/xwalk/maven2'
+            allowInsecureProtocol = true
+        }
     }
 }
 
