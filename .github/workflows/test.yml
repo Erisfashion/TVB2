@@ -51,70 +51,12 @@ jobs:
         mkdir -p app/src/main/java/com/whl/quickjs/android
         mkdir -p app/src/main/java/com/github/tvbox/quickjs
 
-        # 1. QuickJSContext
-        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/QuickJSContext.java
-        package com.whl.quickjs.wrapper;
+        # 1. Base JSObject (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSObject.java
+        package com.github.tvbox.quickjs;
 
-        public class QuickJSContext {
-            private JSObject globalObject;
-
-            public static QuickJSContext create() {
-                QuickJSContext ctx = new QuickJSContext();
-                ctx.globalObject = new JSObject(ctx);
-                return ctx;
-            }
-
-            public static QuickJSContext create(Object any) {
-                return create();
-            }
-
-            public void destroy() {}
-            public void destroyContext() {}
-
-            public JSObject getGlobalObject() {
-                if (globalObject == null) globalObject = new JSObject(this);
-                return globalObject;
-            }
-
-            public JSObject getGlobalThis() {
-                return getGlobalObject();
-            }
-
-            public JSObject createNewJSObject() {
-                return new JSObject(this);
-            }
-
-            public JSArray createNewJSArray() {
-                return new JSArray(this);
-            }
-
-            public Object evaluate(String script) { return null; }
-            public Object evaluate(String script, String fileName) { return null; }
-            public Object evaluate(String script, String fileName, int flags) { return null; }
-
-            public String stringify(Object obj) {
-                return obj != null ? String.valueOf(obj) : "null";
-            }
-
-            public Object parse(String json) {
-                return createNewJSObject();
-            }
-
-            public void initConsole(Object console) {}
-            public void setConsole(Object console) {}
-            public void setModule(Object module) {}
-            public void setModuleLoader(Object loader) {}
-            public void setJSModule(Object module) {}
-            public void throwError(String error) {}
-            public void throwError(Throwable t) {}
-            public long getNativeContext() { return 0L; }
-        }
-        EOF
-
-        # 2. JSObject
-        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSObject.java
-        package com.whl.quickjs.wrapper;
-
+        import com.whl.quickjs.wrapper.JSCallFunctionCallback;
+        import com.whl.quickjs.wrapper.QuickJSContext;
         import java.util.HashMap;
         import java.util.Map;
 
@@ -177,7 +119,7 @@ jobs:
             public void registerJavaMethod(JSCallFunctionCallback callback, String name) {
                 properties.put(name, callback);
             }
-            public void registerJavaMethod(com.github.tvbox.quickjs.JSCallFunction callback, String name) {
+            public void registerJavaMethod(JSCallFunction callback, String name) {
                 properties.put(name, callback);
             }
             public void registerJavaMethod(Object target, String methodName, String jsName, Class<?>... parameterTypes) {}
@@ -192,10 +134,11 @@ jobs:
         }
         EOF
 
-        # 3. JSArray
-        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSArray.java
-        package com.whl.quickjs.wrapper;
+        # 2. Base JSArray (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSArray.java
+        package com.github.tvbox.quickjs;
 
+        import com.whl.quickjs.wrapper.QuickJSContext;
         import java.util.ArrayList;
         import java.util.List;
 
@@ -229,18 +172,102 @@ jobs:
         }
         EOF
 
-        # 4. JSFunction
-        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSFunction.java
-        package com.whl.quickjs.wrapper;
+        # 3. Base JSFunction (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSFunction.java
+        package com.github.tvbox.quickjs;
+
+        import com.whl.quickjs.wrapper.QuickJSContext;
 
         public class JSFunction extends JSObject {
+            public JSFunction() { super(null); }
             public JSFunction(QuickJSContext context) { super(context); }
             public Object call(Object... args) { return null; }
             public Object call(JSObject thisObj, Object... args) { return null; }
         }
         EOF
 
-        # 5. JSCallFunctionCallback
+        # 4. JSCallFunction (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSCallFunction.java
+        package com.github.tvbox.quickjs;
+
+        public interface JSCallFunction extends com.whl.quickjs.wrapper.JSCallFunctionCallback {
+            @Override
+            Object call(Object... args);
+        }
+        EOF
+
+        # 5. JSModule (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSModule.java
+        package com.github.tvbox.quickjs;
+
+        public class JSModule {
+            private static Loader sLoader;
+
+            public interface Loader {
+                default String getModuleScript(String moduleName) { return null; }
+                default String convertModuleName(String moduleBaseName, String moduleName) { return moduleName; }
+                default String getModule(String moduleName) { return null; }
+                default String getCode(String moduleName) { return null; }
+            }
+
+            public static void setModuleLoader(Loader loader) {
+                sLoader = loader;
+            }
+
+            public static Loader getModuleLoader() {
+                return sLoader;
+            }
+
+            public static String convertModuleName(String moduleBaseName, String moduleName) {
+                if (sLoader != null) {
+                    return sLoader.convertModuleName(moduleBaseName, moduleName);
+                }
+                return moduleName;
+            }
+
+            public static String getModuleScript(String moduleName) {
+                if (sLoader != null) {
+                    return sLoader.getModuleScript(moduleName);
+                }
+                return null;
+            }
+        }
+        EOF
+
+        # 6. Wrapper subclasses (com.whl.quickjs.wrapper)
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSObject.java
+        package com.whl.quickjs.wrapper;
+
+        public class JSObject extends com.github.tvbox.quickjs.JSObject {
+            public JSObject() { super(); }
+            public JSObject(QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSArray.java
+        package com.whl.quickjs.wrapper;
+
+        public class JSArray extends com.github.tvbox.quickjs.JSArray {
+            public JSArray() { super(); }
+            public JSArray(QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSFunction.java
+        package com.whl.quickjs.wrapper;
+
+        public class JSFunction extends com.github.tvbox.quickjs.JSFunction {
+            public JSFunction() { super(); }
+            public JSFunction(QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSModule.java
+        package com.whl.quickjs.wrapper;
+
+        public class JSModule extends com.github.tvbox.quickjs.JSModule {}
+        EOF
+
         cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/JSCallFunctionCallback.java
         package com.whl.quickjs.wrapper;
 
@@ -249,7 +276,85 @@ jobs:
         }
         EOF
 
-        # 6. QuickJSLoader
+        # 7. QuickJSContext (com.whl.quickjs.wrapper)
+        cat << 'EOF' > app/src/main/java/com/whl/quickjs/wrapper/QuickJSContext.java
+        package com.whl.quickjs.wrapper;
+
+        import com.github.tvbox.quickjs.JSArray;
+        import com.github.tvbox.quickjs.JSObject;
+
+        public class QuickJSContext {
+            private JSObject globalObject;
+
+            public static QuickJSContext create() {
+                QuickJSContext ctx = new QuickJSContext();
+                ctx.globalObject = new JSObject(ctx);
+                return ctx;
+            }
+
+            public static QuickJSContext create(Object any) {
+                return create();
+            }
+
+            public void destroy() {}
+            public void destroyContext() {}
+
+            public JSObject getGlobalObject() {
+                if (globalObject == null) globalObject = new JSObject(this);
+                return globalObject;
+            }
+
+            public JSObject getGlobalThis() {
+                return getGlobalObject();
+            }
+
+            public JSObject createNewJSObject() {
+                return new JSObject(this);
+            }
+
+            public JSArray createNewJSArray() {
+                return new JSArray(this);
+            }
+
+            public Object evaluate(String script) { return null; }
+            public Object evaluate(String script, String fileName) { return null; }
+            public Object evaluate(String script, String fileName, int flags) { return null; }
+
+            public Object evaluateModule(String script, String moduleName) { return null; }
+            public Object evaluateModule(String script) { return null; }
+
+            public Object getProperty(JSObject obj, String key) {
+                return obj != null ? obj.get(key) : null;
+            }
+
+            public Object getProperty(JSObject obj, int index) {
+                return obj != null ? obj.get(index) : null;
+            }
+
+            public String stringify(Object obj) {
+                return obj != null ? String.valueOf(obj) : "null";
+            }
+
+            public Object parse(String json) {
+                return createNewJSObject();
+            }
+
+            public Object parseJSON(String json) {
+                return createNewJSObject();
+            }
+
+            public void initConsole(Object console) {}
+            public void setConsole(Object console) {}
+            public void setModule(Object module) {}
+            public void setModuleLoader(Object loader) {}
+            public void setJSModule(Object module) {}
+            public void throwError(String error) {}
+            public void throwError(Throwable t) {}
+            public long getNativeContext() { return 0L; }
+        }
+        EOF
+
+        # 8. QuickJSLoader
         cat << 'EOF' > app/src/main/java/com/whl/quickjs/android/QuickJSLoader.java
         package com.whl.quickjs.android;
 
@@ -264,15 +369,17 @@ jobs:
         }
         EOF
 
-        # 7. JSUtils (含完整判空及数据转换方法)
+        # 9. QuickJSContext Alias (com.github.tvbox.quickjs)
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/QuickJSContext.java
+        package com.github.tvbox.quickjs;
+        public class QuickJSContext extends com.whl.quickjs.wrapper.QuickJSContext {}
+        EOF
+
+        # 10. JSUtils (com.github.tvbox.quickjs)
         cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSUtils.java
         package com.github.tvbox.quickjs;
 
-        import com.whl.quickjs.wrapper.JSArray;
-        import com.whl.quickjs.wrapper.JSFunction;
-        import com.whl.quickjs.wrapper.JSObject;
         import com.whl.quickjs.wrapper.QuickJSContext;
-
         import java.io.BufferedReader;
         import java.io.InputStream;
         import java.io.InputStreamReader;
@@ -486,53 +593,6 @@ jobs:
             public static boolean optBoolean(JSObject obj, String key) {
                 return optBoolean(obj, key, false);
             }
-        }
-        EOF
-
-        # 8. 同名兼容别名 (com.github.tvbox.quickjs)
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/QuickJSContext.java
-        package com.github.tvbox.quickjs;
-        public class QuickJSContext extends com.whl.quickjs.wrapper.QuickJSContext {}
-        EOF
-
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSObject.java
-        package com.github.tvbox.quickjs;
-        public class JSObject extends com.whl.quickjs.wrapper.JSObject {
-            public JSObject() { super(null); }
-            public JSObject(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
-        }
-        EOF
-
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSArray.java
-        package com.github.tvbox.quickjs;
-        public class JSArray extends com.whl.quickjs.wrapper.JSArray {
-            public JSArray() { super(null); }
-            public JSArray(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
-        }
-        EOF
-
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSFunction.java
-        package com.github.tvbox.quickjs;
-        public class JSFunction extends com.whl.quickjs.wrapper.JSFunction {
-            public JSFunction(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
-        }
-        EOF
-
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSCallFunction.java
-        package com.github.tvbox.quickjs;
-        public interface JSCallFunction extends com.whl.quickjs.wrapper.JSCallFunctionCallback {
-            @Override
-            Object call(Object... args);
-        }
-        EOF
-
-        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSModule.java
-        package com.github.tvbox.quickjs;
-        public interface JSModule {
-            default String getModuleCode(String name) { return null; }
-            default String getCode(String name) { return null; }
-            default String getModule(String name) { return null; }
-            default String getModuleScript(String name) { return null; }
         }
         EOF
 
