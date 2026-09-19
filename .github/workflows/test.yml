@@ -30,16 +30,14 @@ jobs:
     - name: Prepare x86 Native Libraries
       run: |
         mkdir -p player/src/main/jniLibs/x86
+        mkdir -p /tmp/ijk_extracted
 
-        # 从稳定的公开归档中下载 ijkplayer x86 .so 文件
-        SO_URL="https://github.com/CarGuo/GSYVideoPlayer/raw/v8.1.8/gsyVideoPlayer-x86/libs/x86"
-        SO_FILES=("libijkffmpeg.so" "libijkplayer.so" "libijksdl.so")
+        # 从阿里云官方镜像归档直接下载 ijkplayer-x86 AAR
+        curl -f -L -s -S -o /tmp/ijk-x86.aar "https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+        unzip -q -o /tmp/ijk-x86.aar -d /tmp/ijk_extracted
+        cp -r /tmp/ijk_extracted/jni/x86/* player/src/main/jniLibs/x86/
 
-        for file in "${SO_FILES[@]}"; do
-          echo "Downloading $file..."
-          curl -f -L -s -S -o "player/src/main/jniLibs/x86/$file" "$SO_URL/$file" || true
-        done
-
+        echo "Verified x86 SO files:"
         ls -la player/src/main/jniLibs/x86/
 
     - name: Grant execute permission for gradlew
