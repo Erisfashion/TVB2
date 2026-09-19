@@ -5,7 +5,7 @@
 
     <uses-sdk
         android:minSdkVersion="16"
-        tools:overrideLibrary="org.xwalk.core, com.google.android.exoplayer2.ext.okhttp, com.google.android.exoplayer2, com.google.android.exoplayer2.ui, com.google.android.exoplayer2.source.dash, com.google.android.exoplayer2.source.hls, com.google.android.exoplayer2.source.rtsp, com.google.android.exoplayer2.ext.rtmp, xyz.doikki.videoplayer" />
+        tools:overrideLibrary="org.xwalk.core, com.google.android.exoplayer2.ext.okhttp, com.google.android.exoplayer2, com.google.android.exoplayer2.ui, com.google.android.exoplayer2.source.dash, com.google.android.exoplayer2.source.hls, com.google.android.exoplayer2.source.rtsp, com.google.android.exoplayer2.ext.rtmp, xyz.doikki.videoplayer, com.whl.quickjs.android, com.whl.quickjs.wrapper" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -108,6 +108,14 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.github.tvbox.osc.action.server" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.SearchReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.github.tvbox.osc.SEARCH" />
             </intent-filter>
         </receiver>
 
