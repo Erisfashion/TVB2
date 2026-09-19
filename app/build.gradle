@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.github.lzyzsd:jsbridge:1.0.4'
     implementation 'com.squareup.picasso:picasso:2.71828'
 
-    // 字幕编码与 IO 流支持
+    // 字幕编码与 IO 流
     implementation 'commons-io:commons-io:2.8.0'
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
 
@@ -122,7 +122,11 @@ dependencies {
     implementation 'com.owen:tv-recyclerview:3.0.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.50'
 
-    // XML 解析组件
+    // 文件选择器与权限管理（解决 PlayActivity、BackupDialog、ApiDialog 报错）
+    implementation 'com.obsez.android.lib.filechooser:filechooser:1.2.0'
+    implementation 'com.github.getActivity:XXPermissions:11.6'
+
+    // XML 解析
     implementation ('com.thoughtworks.xstream:xstream:1.4.18') {
         exclude group: 'xmlpull', module: 'xmlpull'
     }
