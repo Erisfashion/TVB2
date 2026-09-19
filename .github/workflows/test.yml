@@ -31,13 +31,14 @@ jobs:
       run: |
         mkdir -p player/src/main/jniLibs/x86
 
-        # 从开源备份拉取 ijkplayer x86 核心动态库
-        BASE_URL="https://raw.githubusercontent.com/CarGuo/GSYVideoPlayer/master/gsyVideoPlayer-x86/src/main/jniLibs/x86"
+        # 从稳定的开源库镜像中获取 ijkplayer x86 二进制
+        BASE_URL="https://raw.githubusercontent.com/CarGuo/GSYVideoPlayer/v8.1.8/gsyVideoPlayer-x86/libs/x86"
         SO_FILES=("libijkffmpeg.so" "libijkplayer.so" "libijksdl.so")
 
         for file in "${SO_FILES[@]}"; do
           echo "Downloading $file..."
-          curl -f -L -s -S -o "player/src/main/jniLibs/x86/$file" "$BASE_URL/$file" || true
+          curl -f -L -s -S -o "player/src/main/jniLibs/x86/$file" "$BASE_URL/$file" || \
+          curl -f -L -s -S -o "player/src/main/jniLibs/x86/$file" "https://raw.githubusercontent.com/bilibili/ijkplayer/k0.8.8/android/ijkplayer/ijkplayer-x86/src/main/libs/x86/$file" || true
         done
 
         ls -la player/src/main/jniLibs/x86/
