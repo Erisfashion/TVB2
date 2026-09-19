@@ -25,11 +25,39 @@ jobs:
     - name: Prepare x86 Native Libraries
       run: |
         mkdir -p /tmp/ijk-x86
-        curl -L -o /tmp/ijk-x86/ijkplayer-x86.aar https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar || \
-        curl -L -o /tmp/ijk-x86/ijkplayer-x86.aar https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar
-        unzip -q -o /tmp/ijk-x86/ijkplayer-x86.aar -d /tmp/ijk-x86/extracted
         mkdir -p player/src/main/jniLibs/x86
+
+        # 多镜像轮询拉取 ijkplayer-x86 0.8.8 AAR 归档文件
+        URLS=(
+          "https://maven.aliyun.com/repository/jcenter/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+          "https://mirrors.huaweicloud.com/repository/maven/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+          "https://raw.githubusercontent.com/bilibili/ijkplayer/k0.8.8/android/ijkplayer/ijkplayer-x86/build/outputs/aar/ijkplayer-x86-release.aar"
+          "https://repo.maven.apache.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+        )
+
+        DOWNLOAD_SUCCESS=false
+        for url in "${URLS[@]}"; do
+          echo "Trying to download from: $url"
+          if curl -f -L -s -S -o /tmp/ijk-x86/ijkplayer-x86.aar "$url"; then
+            # 校验是否为合法 zip/aar 文件
+            if unzip -t /tmp/ijk-x86/ijkplayer-x86.aar > /dev/null 2>&1; then
+              echo "Download successful and verified!"
+              DOWNLOAD_SUCCESS=true
+              break
+            fi
+          fi
+        done
+
+        if [ "$DOWNLOAD_SUCCESS" = false ]; then
+          echo "Error: All mirrors failed to download a valid ijkplayer-x86 AAR."
+          exit 1
+        fi
+
+        # 解压并将 x86 .so 复制到工程目标路径
+        unzip -q -o /tmp/ijk-x86/ijkplayer-x86.aar -d /tmp/ijk-x86/extracted
         cp -r /tmp/ijk-x86/extracted/jni/x86/* player/src/main/jniLibs/x86/
+        
+        echo "Successfully prepared x86 so files:"
         ls -la player/src/main/jniLibs/x86/
 
     - name: Grant execute permission for gradlew
