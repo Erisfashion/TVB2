@@ -22,18 +22,18 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Create Android Debug Keystore
-      run: |
-        mkdir -p ~/.android
-        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-
     - name: Clean Runner Newer SDK Platforms
       run: |
-        # 移除 Ubuntu 24.04 预装的高版本预览平台，防止老版本 AGP 4.2.0 在扫描本地 SDK 时因无法识别扩展格式抛出海量 NumberFormatException
+        # 移除 Ubuntu 24.04 预装的高版本预览平台，防止旧版 AGP 扫描时抛出海量 NumberFormatException 导致日志刷屏
         SDK_DIR="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
         if [ -d "$SDK_DIR/platforms" ]; then
           rm -rf "$SDK_DIR"/platforms/android-3[4-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
         fi
+
+    - name: Create Android Debug Keystore
+      run: |
+        mkdir -p ~/.android
+        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
     - name: Prepare x86 Native Libraries
       run: |
