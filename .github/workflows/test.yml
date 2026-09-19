@@ -22,6 +22,16 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Prepare x86 Native Libraries
+      run: |
+        mkdir -p /tmp/ijk-x86
+        curl -L -o /tmp/ijk-x86/ijkplayer-x86.aar https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar || \
+        curl -L -o /tmp/ijk-x86/ijkplayer-x86.aar https://maven.aliyun.com/repository/public/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar
+        unzip -q -o /tmp/ijk-x86/ijkplayer-x86.aar -d /tmp/ijk-x86/extracted
+        mkdir -p player/src/main/jniLibs/x86
+        cp -r /tmp/ijk-x86/extracted/jni/x86/* player/src/main/jniLibs/x86/
+        ls -la player/src/main/jniLibs/x86/
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
