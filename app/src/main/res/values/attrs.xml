@@ -2,6 +2,12 @@
 <resources>
     <attr name="fontPath" format="string" />
     <attr name="textFieldStyle" format="reference" />
+
+    <!-- 补齐布局文件缺失的 3 个属性声明，解决 AAPT 编译报错 -->
+    <attr name="tv_verticalSpacingWithMargins" format="dimension|reference" />
+    <attr name="tv_horizontalSpacingWithMargins" format="dimension|reference" />
+    <attr name="tv_selectedItemIsCentered" format="boolean" />
+
     <declare-styleable name="lbBaseGridView">
         <attr name="focusOutFront" format="boolean" />
         <attr name="focusOutEnd" format="boolean" />
@@ -27,6 +33,7 @@
         </attr>
         <attr name="numberOfRows" format="integer" />
     </declare-styleable>
+
     <declare-styleable name="RecyclerViewTV">
         <attr name="selectedItemOffsetStartTV" format="dimension" />
         <attr name="selectedItemOffsetEndTV" format="dimension" />
@@ -37,6 +44,7 @@
         <attr name="verticalSpacingWithMarginsTV" format="dimension" />
         <attr name="horizontalSpacingWithMarginsTV" format="dimension" />
     </declare-styleable>
+
     <attr name="startColor" format="reference|color" />
     <attr name="topDelta" format="float" />
     <!-- Selected Paint Color (color). -->
