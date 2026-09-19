@@ -12,9 +12,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        // 关键：提供 loadsir 和 rtmp-client 的历史归档拉取
         maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
         maven { url 'https://jitpack.io' }
     }
 }
