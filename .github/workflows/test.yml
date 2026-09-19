@@ -1,49 +1,43 @@
-package com.github.tvbox.osc.ui.tv;
+name: Test Build
 
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import java.util.Hashtable;
+on:
+  workflow_dispatch:
 
-public class QRCodeGen {
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    // 适配 PushActivity.java 的 4 参数调用
-    public static Bitmap generateBitmap(String content, int width, int height, int margin) {
-        try {
-            if (content == null || content.isEmpty()) {
-                return null;
-            }
-            Hashtable<EncodeHintType, Object> hints = new Hashtable<>();
-            hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
-            hints.put(EncodeHintType.MARGIN, margin);
-            BitMatrix matrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, width, height, hints);
-            int[] pixels = new int[width * height];
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    if (matrix.get(x, y)) {
-                        pixels[y * width + x] = Color.BLACK;
-                    } else {
-                        pixels[y * width + x] = Color.WHITE;
-                    }
-                }
-            }
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-            return bitmap;
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
 
-    // 适配 ApiDialog.java 的 3 参数调用
-    public static Bitmap generateBitmap(String content, int width, int height) {
-        return generateBitmap(content, width, height, 1);
-    }
+      # 🛠️ 关键步骤：清理 GitHub Actions 环境中带有浮点版本号的 Android SDK 组件
+      - name: Clean up incompatible Android SDK components
+        run: |
+          rm -rf $ANDROID_HOME/build-tools/37.1* || true
+          rm -rf $ANDROID_HOME/cmdline-tools/37.1* || true
 
-    public static Bitmap createQRCode(String content) {
-        return generateBitmap(content, 300, 300, 1);
-    }
-}
+      - name: Build With Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
+
+      - name: Prepare App
+        run: |
+          mkdir -p ${{ github.workspace }}/apk/
+          for file in `find ~ -name "*.apk" -print`; do
+            mv "$file" ${{ github.workspace }}/apk/
+          done
+
+      - name: Upload App To Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: com.github.tvbox.osc
+          path: ${{ github.workspace }}/apk/*
