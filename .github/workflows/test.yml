@@ -31,30 +31,41 @@ jobs:
       run: |
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk
+
+        # 尝试从备份源下载含 ijkplayer x86 .so 的归档
+        DOWNLOAD_URLS=(
+          "https://raw.githubusercontent.com/bilibili/ijkplayer/master/android/ijkplayer/ijkplayer-x86/libs/x86"
+          "https://github.com/CarGuo/GSYVideoPlayer/raw/master/gsyVideoPlayer-x86/libs/x86"
+          "https://raw.githubusercontent.com/CarGuo/GSYVideoPlayer/v8.1.8/gsyVideoPlayer-x86/libs/x86"
+        )
+
+        FILES=("libijkffmpeg.so" "libijkplayer.so" "libijksdl.so")
         
-        # 抓取官方 ijkplayer x86 核心动态库
-        echo "Downloading ijkplayer x86 aar..."
-        curl -f -L -s -S -o /tmp/ijk/ijk-x86.aar "https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar" || \
-        curl -f -L -s -S -o /tmp/ijk/ijk-x86.aar "https://repo.maven.apache.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+        for base in "${DOWNLOAD_URLS[@]}"; do
+          echo "Checking source: $base"
+          success=true
+          for f in "${FILES[@]}"; do
+            if ! curl -f -L -s -S -o "/tmp/ijk/$f" "$base/$f"; then
+              success=false
+              break
+            fi
+          done
+          if [ "$success" = true ]; then
+            echo "Successfully downloaded all x86 SO files from $base"
+            cp /tmp/ijk/*.so player/src/main/jniLibs/x86/
+            break
+          fi
+        done
 
-        if [ -f /tmp/ijk/ijk-x86.aar ]; then
-          unzip -q -o /tmp/ijk/ijk-x86.aar -d /tmp/ijk/extracted
-          cp -r /tmp/ijk/extracted/jni/x86/* player/src/main/jniLibs/x86/
-        fi
-
-        ls -la player/src/main/jniLibs/x86/
+        # 检查下载结果
+        ls -la player/src/main/jniLibs/x86/ || true
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build APK with Gradle
       run: |
-        # 传递编译参数并捕获精确 javac 报错
-        ./gradlew assembleRelease -x lint -x test --no-daemon || {
-          echo "=== Javac Failure Detected, Showing Compiler Messages ==="
-          ./gradlew :player:compileReleaseJavaWithJavac --no-daemon --info | grep -E "(error:|failure|cannot find symbol)" || true
-          exit 1
-        }
+        ./gradlew assembleRelease -x lint -x test --no-daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
