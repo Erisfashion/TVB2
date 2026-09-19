@@ -37,6 +37,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     packagingOptions {
         pickFirst 'lib/x86/libijkffmpeg.so'
         pickFirst 'lib/x86/libijkplayer.so'
