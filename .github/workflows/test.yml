@@ -32,24 +32,31 @@ jobs:
         mkdir -p player/src/main/jniLibs/x86
         mkdir -p /tmp/ijk
 
-        # 下载官方 ijkplayer x86 发布包并提取 so 动态库
         echo "Fetching ijkplayer x86 binaries..."
-        curl -L -f -o /tmp/ijk/ijk-x86.aar "https://maven.aliyun.com/nexus/content/repositories/releases/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar" || \
-        curl -L -f -o /tmp/ijk/ijk-x86.aar "https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar" || true
+        URLS=(
+          "https://maven.aliyun.com/repository/jcenter/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+          "https://repo1.maven.org/maven2/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+          "https://mirrors.huaweicloud.com/repository/maven/tv/danmaku/ijk/media/ijkplayer-x86/0.8.8/ijkplayer-x86-0.8.8.aar"
+        )
+        for u in "${URLS[@]}"; do
+          echo "Trying $u"
+          if curl -f -L -s -S -o /tmp/ijk/ijk-x86.aar "$u"; then
+            if unzip -t /tmp/ijk/ijk-x86.aar > /dev/null 2>&1; then
+              unzip -q -o /tmp/ijk/ijk-x86.aar -d /tmp/ijk/unpacked
+              cp -r /tmp/ijk/unpacked/jni/x86/* player/src/main/jniLibs/x86/
+              echo "Successfully copied x86 so files."
+              break
+            fi
+          fi
+        done
 
-        if [ -f /tmp/ijk/ijk-x86.aar ] && unzip -t /tmp/ijk/ijk-x86.aar > /dev/null 2>&1; then
-          unzip -q -o /tmp/ijk/ijk-x86.aar -d /tmp/ijk/unpacked
-          cp -r /tmp/ijk/unpacked/jni/x86/* player/src/main/jniLibs/x86/
-        fi
-
-        echo "Files in player/src/main/jniLibs/x86:"
         ls -la player/src/main/jniLibs/x86/
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build APK with Gradle
-      run: ./gradlew assembleRelease -x lint -x test --no-daemon --info
+      run: ./gradlew assembleRelease -x lint -x test --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
