@@ -42,15 +42,14 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'androidx.annotation:annotation:1.2.0'
 
-    // OkHttp 基础依赖
+    // OkHttp
     api 'com.squareup.okhttp3:okhttp:3.12.13'
 
-    // 与源码严格匹配的 ExoPlayer 2.14.2 全套组件与扩展
+    // ExoPlayer 2.14.2 可用组件
     api 'com.google.android.exoplayer:exoplayer-core:2.14.2'
     api 'com.google.android.exoplayer:exoplayer-dash:2.14.2'
     api 'com.google.android.exoplayer:exoplayer-hls:2.14.2'
     api 'com.google.android.exoplayer:exoplayer-ui:2.14.2'
-    api 'com.google.android.exoplayer:extension-rtsp:2.14.2'
     api 'com.google.android.exoplayer:extension-rtmp:2.14.2'
     api 'com.google.android.exoplayer:extension-okhttp:2.14.2'
 }
