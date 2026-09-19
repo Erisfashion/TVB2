@@ -20,7 +20,7 @@ jobs:
 
     - name: Clean Runner Newer SDK Platforms
       run: |
-        # 移除高于 Android 30 的预览平台，彻底消除 NumberFormatException 警告
+        # 移除高版本构建工具与平台，彻底避免 AGP 4.2 扫描时输出海量 NumberFormatException
         SDK_DIR="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
         if [ -d "$SDK_DIR" ]; then
           rm -rf "$SDK_DIR"/platforms/android-3[1-9]* "$SDK_DIR"/platforms/android-[4-9]* || true
@@ -101,7 +101,12 @@ jobs:
             }
 
             public void initConsole(Object console) {}
+            public void setConsole(Object console) {}
+            public void setModule(Object module) {}
+            public void setModuleLoader(Object loader) {}
+            public void setJSModule(Object module) {}
             public void throwError(String error) {}
+            public void throwError(Throwable t) {}
             public long getNativeContext() { return 0L; }
         }
         EOF
@@ -117,13 +122,13 @@ jobs:
             protected final QuickJSContext context;
             protected final Map<String, Object> properties = new HashMap<>();
 
-            public JSObject(QuickJSContext context) {
-                this.context = context;
-            }
+            public JSObject() { this(null); }
+            public JSObject(QuickJSContext context) { this.context = context; }
 
             public QuickJSContext getContext() { return context; }
 
             public Object get(String key) { return properties.get(key); }
+            public Object get(int index) { return properties.get(String.valueOf(index)); }
             public String getString(String key) {
                 Object val = properties.get(key);
                 return val != null ? val.toString() : null;
@@ -172,6 +177,9 @@ jobs:
             public void registerJavaMethod(JSCallFunctionCallback callback, String name) {
                 properties.put(name, callback);
             }
+            public void registerJavaMethod(com.github.tvbox.quickjs.JSCallFunction callback, String name) {
+                properties.put(name, callback);
+            }
             public void registerJavaMethod(Object target, String methodName, String jsName, Class<?>... parameterTypes) {}
 
             public String[] getNames() {
@@ -180,6 +188,7 @@ jobs:
             public String stringify() { return toString(); }
             public void release() {}
             public boolean isUndefined() { return false; }
+            public boolean isNull() { return false; }
         }
         EOF
 
@@ -193,6 +202,7 @@ jobs:
         public class JSArray extends JSObject {
             private final List<Object> list = new ArrayList<>();
 
+            public JSArray() { super(null); }
             public JSArray(QuickJSContext context) { super(context); }
 
             public int length() { return list.size(); }
@@ -426,7 +436,41 @@ jobs:
         cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSObject.java
         package com.github.tvbox.quickjs;
         public class JSObject extends com.whl.quickjs.wrapper.JSObject {
+            public JSObject() { super(null); }
             public JSObject(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSArray.java
+        package com.github.tvbox.quickjs;
+        public class JSArray extends com.whl.quickjs.wrapper.JSArray {
+            public JSArray() { super(null); }
+            public JSArray(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSFunction.java
+        package com.github.tvbox.quickjs;
+        public class JSFunction extends com.whl.quickjs.wrapper.JSFunction {
+            public JSFunction(com.whl.quickjs.wrapper.QuickJSContext context) { super(context); }
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSCallFunction.java
+        package com.github.tvbox.quickjs;
+        public interface JSCallFunction extends com.whl.quickjs.wrapper.JSCallFunctionCallback {
+            @Override
+            Object call(Object... args);
+        }
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/github/tvbox/quickjs/JSModule.java
+        package com.github.tvbox.quickjs;
+        public interface JSModule {
+            default String getModuleCode(String name) { return null; }
+            default String getCode(String name) { return null; }
+            default String getModule(String name) { return null; }
+            default String getModuleScript(String name) { return null; }
         }
         EOF
 
