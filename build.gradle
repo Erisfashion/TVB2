@@ -2,7 +2,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.0"
@@ -13,6 +12,9 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // 专门拉取旧版 ExoPlayer 2.12.1 与 LoadSir 等历史归档依赖
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
         maven { url 'https://jitpack.io' }
     }
 }
